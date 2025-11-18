@@ -1,0 +1,266 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+} from "react-native";
+import Checkbox from "expo-checkbox";
+import { Calendar } from "react-native-calendars";
+import servicesData from "../assets/jsonData/servicesData.json";
+import CheckIcon from "../assets/icons/check.svg";
+
+export default function ServicesScreen() {
+  const [expanded, setExpanded] = useState({});
+  const [selected, setSelected] = useState({});
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+
+  // ===== логика выбора услуг =====
+  const toggleCategory = (category) =>
+    setExpanded((prev) => ({ ...prev, [category]: !prev[category] }));
+
+  const toggleService = (category, serviceName, price) => {
+    setSelected((prev) => {
+      const key = `${category}-${serviceName}`;
+      const newSelected = { ...prev };
+      if (newSelected[key]) delete newSelected[key];
+      else newSelected[key] = price;
+      return newSelected;
+    });
+  };
+
+  const totalPrice = Object.values(selected).reduce((sum, price) => sum + price, 0);
+
+  // ===== шаги =====
+  const renderStepContent = () => {
+    // --- 1. Услуги ---
+    if (currentStep === 1) {
+      return (
+        <>
+          <ScrollView contentContainerStyle={styles.scroll}>
+            {Object.entries(servicesData).map(([category, services]) => (
+              <View key={category} style={styles.category}>
+                <TouchableOpacity
+                  onPress={() => toggleCategory(category)}
+                  style={styles.categoryHeader}
+                >
+                  <Text style={styles.categoryTitle}>{category}</Text>
+                  <Text style={styles.arrow}>{expanded[category] ? "▲" : "▼"}</Text>
+                </TouchableOpacity>
+
+                {expanded[category] &&
+                  services.map((s) => {
+                    const key = `${category}-${s.name}`;
+                    const isChecked = !!selected[key];
+                    return (
+                      <TouchableOpacity
+                        key={key}
+                        style={styles.serviceItem}
+                        onPress={() => toggleService(category, s.name, s.price)}
+                        activeOpacity={0.7}
+                      >
+                        <Checkbox
+                          value={isChecked}
+                          color={isChecked ? "#ACCBFA" : undefined}
+                          style={{ marginRight: 10 }}
+                          disabled
+                        />
+                        <View style={styles.info}>
+                          <Text style={styles.serviceName}>{s.name}</Text>
+                          <Text style={styles.price}>{s.price} ₽</Text>
+                          <Text style={styles.time}>{s.time} мин</Text>
+                        </View>
+                        <Image source={{ uri: s.photo }} style={styles.photo} />
+                      </TouchableOpacity>
+                    );
+                  })}
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalText}>К оплате: {totalPrice} ₽</Text>
+            <TouchableOpacity
+              style={[styles.bookButton, totalPrice === 0 && styles.bookButtonDisabled]}
+              disabled={totalPrice === 0}
+              onPress={() => setCurrentStep(2)}
+            >
+              <Text style={styles.bookText}>Выбрать дату</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      );
+    }
+
+    // --- 2. Дата и время ---
+    if (currentStep === 2) {
+      const availableTimes = [
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+      ];
+
+      return (
+        <ScrollView
+          contentContainerStyle={{ flex: 1, alignItems: "center", paddingTop: 20 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={[styles.header, { fontSize: 20, marginTop: 10 }]}>Выберите дату</Text>
+
+          {/* Календарь */}
+          <Calendar
+            minDate={new Date().toISOString().split("T")[0]}
+            onDayPress={(day) => setSelectedDate(day.dateString)}
+            markedDates={
+              selectedDate
+                ? { [selectedDate]: { selected: true, selectedColor: "#ACCBFA" } }
+                : {}
+            }
+            theme={{
+              todayTextColor: "#ACCBFA",
+              arrowColor: "#ACCBFA",
+              textDayFontSize: 16,
+              textMonthFontWeight: "bold",
+              monthTextColor: "#333",
+            }}
+            style={styles.calendar}
+          />
+
+          {selectedDate && (
+            <>
+              <Text style={[styles.header, { fontSize: 20, marginTop: 10 }]}>
+                Выберите время
+              </Text>
+              <View style={styles.timeGrid}>
+                {availableTimes.map((time) => (
+                  <TouchableOpacity
+                    key={time}
+                    style={[
+                      styles.timeButton,
+                      selectedTime === time && styles.timeButtonActive,
+                    ]}
+                    onPress={() => setSelectedTime(time)}
+                  >
+                    <Text
+                      style={[
+                        styles.timeButtonText,
+                        selectedTime === time && styles.timeButtonTextActive,
+                      ]}
+                    >
+                      {time}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+
+          <View style={styles.totalContainer}>
+            <TouchableOpacity
+              style={[
+                styles.bookButton,
+                (!selectedDate || !selectedTime) && styles.bookButtonDisabled,
+              ]}
+              disabled={!selectedDate || !selectedTime}
+              onPress={() => setCurrentStep(3)}
+            >
+              <Text style={styles.bookText}>Подтвердить</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      );
+    }
+
+    // --- 3. Подтверждение ---
+    if (currentStep === 3) {
+      return (
+        <View style={styles.confirmContainer}>
+          <View style={styles.successContent}>
+            <CheckIcon width={120} height={120} />
+            <Text style={styles.successText}>
+              Вы успешно записались на{" "}
+              {selectedDate.split('-').reverse().join('-')} в {selectedTime}
+            </Text>
+            <Text style={styles.successPrice}>Сумма: {totalPrice} ₽</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.doneButton}
+            onPress={() => {
+              setSelected({});
+              setSelectedDate(null);
+              setSelectedTime(null);
+              setCurrentStep(1);
+            }}
+          >
+            <Text style={styles.bookText}>Готово</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.header}>
+        {currentStep === 1
+          ? "Выбор услуг"
+          : currentStep === 2
+          ? "Выбор даты и времени"
+          : "Подтверждение"}
+      </Text>
+
+      {/* Степпер */}
+      <View style={styles.stepper}>
+        {["Услуги", "Дата", "Подтверждение"].map((label, index) => {
+          const step = index + 1;
+          const active = step <= currentStep;
+          const isClickable = step < currentStep; // можно возвращаться только на предыдущие шаги
+
+          return (
+            <TouchableOpacity
+              key={label}
+              style={styles.stepContainer}
+              disabled={!isClickable}
+              onPress={() => {
+                if (isClickable) setCurrentStep(step);
+              }}
+              activeOpacity={0.6}
+            >
+              <View style={styles.stepTop}>
+                <View
+                  style={[
+                    styles.stepCircle,
+                    active && styles.stepActive,
+                    isClickable && { borderColor: "#85b3f7ff" },
+                  ]}
+                >
+                  <Text
+                    style={[styles.stepNumber, active && styles.stepNumberActive]}
+                  >
+                    {step}
+                  </Text>
+                </View>
+                {step < 3 && (
+                  <View style={[styles.stepLine, active && styles.stepLineActive]} />
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {renderStepContent()}
+    </View>
+  );
+}
