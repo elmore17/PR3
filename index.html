@@ -28,8 +28,11 @@ export default function ServicesScreen() {
     setSelected((prev) => {
       const key = `${category}-${serviceName}`;
       const newSelected = { ...prev };
-      if (newSelected[key]) delete newSelected[key];
-      else newSelected[key] = price;
+      if (newSelected[key]) {
+        delete newSelected[key];
+      } else {
+        newSelected[key] = price;
+      }
       return newSelected;
     });
   };
