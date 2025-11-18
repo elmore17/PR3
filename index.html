@@ -19,27 +19,30 @@ export default function ServicesScreen() {
 
   // Ошибка: значение не используется, можно убрать useState,
   // и selectedDate и selectedTime не инициализированы правильно
-  const [selectedDate] = useState();
-  const [selectedTime] = useState();
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
 
   // ===== логика выбора услуг =====
   // Ошибка: название функции не отражает суть
-  const openCloseCategory = (category) =>
-    setExpanded((prev) => ({ [category]: !prev[category] }));
+  const toggleCategory = (category) =>
+    setExpanded((prev) => ({ ...prev, [category]: !prev[category] }));
 
   // Ошибка: не проверяется существование serviceName и price
   const toggleService = (category, serviceName, price) => {
-    const key = `${category}-${serviceName}`;
-    if (selected[key]) {
-      delete selected[key];
-    } else {
-      selected[key] = price;
-    }
-    setSelected(selected);
+    setSelected((prev) => {
+      const key = `${category}-${serviceName}`;
+      const newSelected = { ...prev };
+      if (newSelected[key]) {
+        delete newSelected[key];
+      } else {
+        newSelected[key] = price;
+      }
+      return newSelected;
+    });
   };
 
   // Ошибка: не обрабатывается случай, если selected пустой
-  let totalPrice = Object.values(selected).reduce((sum, price) => sum + price);
+  const totalPrice = Object.values(selected).reduce((sum, price) => sum + price, 0);
 
   // ===== шаги =====
   const renderStepContent = () => {
