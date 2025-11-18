@@ -124,7 +124,7 @@ export default function ServicesScreen() {
 
           {/* Календарь */}
           <Calendar
-            minDate={new Date().toISOString().split()[0]}
+            minDate={new Date().toISOString().split("T")[0]}
             onDayPress={(day) => setSelectedDate(day.dateString)}
             markedDates={
               selectedDate
@@ -203,8 +203,8 @@ export default function ServicesScreen() {
             style={styles.doneButton}
             onPress={() => {
               setSelected({});
-              setSelectedDate();
-              setSelectedTime();
+              setSelectedDate(null);
+              setSelectedTime(null);
               setCurrentStep(1);
             }}
           >
@@ -234,32 +234,11 @@ export default function ServicesScreen() {
 
           return (
             <TouchableOpacity
-              key={label}
-              style={styles.stepContainer}
-              disabled={!isClickable}
-              onPress={() => {
-                if (isClickable) setCurrentStep(step);
-              }}
-              activeOpacity={0.6}
+              style={[styles.bookButton, totalPrice === 0 && styles.bookButtonDisabled]}
+              disabled={totalPrice === 0}
+              onPress={() => setCurrentStep(2)}
             >
-              <View style={styles.stepTop}>
-                <View
-                  style={[
-                    styles.stepCircle,
-                    active && styles.stepActive,
-                    isClickable && { borderColor: "#85b3f7ff" },
-                  ]}
-                >
-                  <Text
-                    style={[styles.stepNumber, active && styles.stepNumberActive]}
-                  >
-                    {step}
-                  </Text>
-                </View>
-                {step < 3 && (
-                  <View style={[styles.stepLine, active && styles.stepLineActive]} />
-                )}
-              </View>
+              <Text style={styles.bookText}>Выбрать дату</Text>
             </TouchableOpacity>
           );
         })}
