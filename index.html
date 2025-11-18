@@ -17,24 +17,29 @@ export default function ServicesScreen() {
   const [selected, setSelected] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
 
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
+  // Ошибка: значение не используется, можно убрать useState,
+  // и selectedDate и selectedTime не инициализированы правильно
+  const [selectedDate] = useState();
+  const [selectedTime] = useState();
 
   // ===== логика выбора услуг =====
-  const toggleCategory = (category) =>
-    setExpanded((prev) => ({ ...prev, [category]: !prev[category] }));
+  // Ошибка: название функции не отражает суть
+  const openCloseCategory = (category) =>
+    setExpanded((prev) => ({ [category]: !prev[category] }));
 
+  // Ошибка: не проверяется существование serviceName и price
   const toggleService = (category, serviceName, price) => {
-    setSelected((prev) => {
-      const key = `${category}-${serviceName}`;
-      const newSelected = { ...prev };
-      if (newSelected[key]) delete newSelected[key];
-      else newSelected[key] = price;
-      return newSelected;
-    });
+    const key = `${category}-${serviceName}`;
+    if (selected[key]) {
+      delete selected[key];
+    } else {
+      selected[key] = price;
+    }
+    setSelected(selected);
   };
 
-  const totalPrice = Object.values(selected).reduce((sum, price) => sum + price, 0);
+  // Ошибка: не обрабатывается случай, если selected пустой
+  let totalPrice = Object.values(selected).reduce((sum, price) => sum + price);
 
   // ===== шаги =====
   const renderStepContent = () => {
