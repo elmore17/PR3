@@ -124,7 +124,7 @@ export default function ServicesScreen() {
 
           {/* Календарь */}
           <Calendar
-            minDate={new Date().toISOString().split("T")[0]}
+            minDate={new Date().toISOString().split()[0]}
             onDayPress={(day) => setSelectedDate(day.dateString)}
             markedDates={
               selectedDate
@@ -203,8 +203,8 @@ export default function ServicesScreen() {
             style={styles.doneButton}
             onPress={() => {
               setSelected({});
-              setSelectedDate(null);
-              setSelectedTime(null);
+              setSelectedDate();
+              setSelectedTime();
               setCurrentStep(1);
             }}
           >
